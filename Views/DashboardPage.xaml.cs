@@ -15,6 +15,11 @@ public sealed partial class DashboardPage : Page
         DataContext = ViewModel;
     }
 
+
+    private void OnToggleCollapsedClick(object sender, RoutedEventArgs e)
+    {
+        ((sender as FrameworkElement)?.Tag as CommandViewModel)?.ToggleCollapsed();
+    }
     private async void OnStartClick(object sender, RoutedEventArgs e)
     {
         await ViewModel.StartAsync((sender as FrameworkElement)?.Tag as CommandViewModel);
