@@ -169,8 +169,6 @@ public sealed class CommandViewModel : ObservableObject
     public bool HasUrl => !string.IsNullOrWhiteSpace(Config.Url);
     public Visibility OpenUrlVisibility => HasUrl ? Visibility.Visible : Visibility.Collapsed;
     public Visibility DetailsVisibility => IsCollapsed ? Visibility.Collapsed : Visibility.Visible;
-    public string CollapseGlyph => IsCollapsed ? "\uE70D" : "\uE70E";
-    public string CollapseAutomationName => IsCollapsed ? "Expand command card" : "Collapse command card";
     public bool IsStartEnabled => Status is CommandStatus.Stopped or CommandStatus.Error or CommandStatus.Crashed or CommandStatus.PortConflict;
     public bool IsStopEnabled => Status is CommandStatus.Running or CommandStatus.Starting;
     public bool IsRestartEnabled => Status is not CommandStatus.Starting and not CommandStatus.Stopping;
@@ -183,8 +181,6 @@ public sealed class CommandViewModel : ObservableObject
             if (SetProperty(ref _isCollapsed, value))
             {
                 OnPropertyChanged(nameof(DetailsVisibility));
-                OnPropertyChanged(nameof(CollapseGlyph));
-                OnPropertyChanged(nameof(CollapseAutomationName));
             }
         }
     }
@@ -209,6 +205,11 @@ public sealed class CommandViewModel : ObservableObject
         ? new SolidColorBrush(Microsoft.UI.Colors.Black)
         : new SolidColorBrush(Microsoft.UI.Colors.White);
 
+    public void SetCollapsed(bool isCollapsed)
+    {
+        IsCollapsed = isCollapsed;
+    }
+
     public void Refresh(CommandRuntimeState state)
     {
         Status = state.Status;
@@ -219,8 +220,4 @@ public sealed class CommandViewModel : ObservableObject
         OnPropertyChanged(nameof(LastLogDisplay));
     }
 
-    public void ToggleCollapsed()
-    {
-        IsCollapsed = !IsCollapsed;
-    }
 }

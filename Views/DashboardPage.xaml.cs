@@ -16,9 +16,9 @@ public sealed partial class DashboardPage : Page
     }
 
 
-    private void OnToggleCollapsedClick(object sender, RoutedEventArgs e)
+    private void OnToggleSectionCollapsedClick(object sender, RoutedEventArgs e)
     {
-        ((sender as FrameworkElement)?.Tag as CommandViewModel)?.ToggleCollapsed();
+        ((sender as FrameworkElement)?.Tag as ProjectViewModel)?.ToggleCollapsed();
     }
     private async void OnStartClick(object sender, RoutedEventArgs e)
     {
