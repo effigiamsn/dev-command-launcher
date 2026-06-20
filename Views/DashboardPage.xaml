@@ -19,7 +19,17 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Spacing="10" Margin="0,0,0,18">
-                            <TextBlock Text="{Binding Name}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Width="32" Height="32" Padding="0" Tag="{Binding}" AutomationProperties.Name="{Binding CollapseAutomationName}" Click="OnToggleSectionCollapsedClick">
+                                    <ToolTipService.ToolTip>Collapse or expand section</ToolTipService.ToolTip>
+                                    <FontIcon Glyph="{Binding CollapseGlyph}" FontSize="14" />
+                                </Button>
+                            </Grid>
                             <GridView
                                 ItemsSource="{Binding Commands}"
                                 SelectionMode="None"
@@ -56,16 +66,11 @@
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding ButtonName}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                                     <Border Grid.Column="1" Padding="9,4" CornerRadius="4" Background="{Binding StatusBadgeBackground}" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusBadgeForeground}" FontWeight="SemiBold" />
                                                     </Border>
-                                                    <Button Grid.Column="2" Width="32" Height="32" Padding="0" Tag="{Binding}" AutomationProperties.Name="{Binding CollapseAutomationName}" Click="OnToggleCollapsedClick">
-                                                        <ToolTipService.ToolTip>Collapse or expand</ToolTipService.ToolTip>
-                                                        <FontIcon Glyph="{Binding CollapseGlyph}" FontSize="14" />
-                                                    </Button>
                                                 </Grid>
 
                                                 <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="8" Visibility="{Binding DetailsVisibility}">
