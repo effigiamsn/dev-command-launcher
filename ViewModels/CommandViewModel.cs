@@ -13,6 +13,7 @@ public sealed class CommandViewModel : ObservableObject
     private string _lastLogLine = "-";
     private string _uptime = "-";
     private string _portText;
+    private bool _isCollapsed;
 
     public CommandViewModel(CommandConfig config)
     {
@@ -167,9 +168,22 @@ public sealed class CommandViewModel : ObservableObject
     public string LastLogDisplay => $"Last log: {LastLogLine}";
     public bool HasUrl => !string.IsNullOrWhiteSpace(Config.Url);
     public Visibility OpenUrlVisibility => HasUrl ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility DetailsVisibility => IsCollapsed ? Visibility.Collapsed : Visibility.Visible;
     public bool IsStartEnabled => Status is CommandStatus.Stopped or CommandStatus.Error or CommandStatus.Crashed or CommandStatus.PortConflict;
     public bool IsStopEnabled => Status is CommandStatus.Running or CommandStatus.Starting;
     public bool IsRestartEnabled => Status is not CommandStatus.Starting and not CommandStatus.Stopping;
+
+    public bool IsCollapsed
+    {
+        get => _isCollapsed;
+        private set
+        {
+            if (SetProperty(ref _isCollapsed, value))
+            {
+                OnPropertyChanged(nameof(DetailsVisibility));
+            }
+        }
+    }
 
     public string StatusText => Status switch
     {
@@ -191,6 +205,11 @@ public sealed class CommandViewModel : ObservableObject
         ? new SolidColorBrush(Microsoft.UI.Colors.Black)
         : new SolidColorBrush(Microsoft.UI.Colors.White);
 
+    public void SetCollapsed(bool isCollapsed)
+    {
+        IsCollapsed = isCollapsed;
+    }
+
     public void Refresh(CommandRuntimeState state)
     {
         Status = state.Status;
@@ -200,4 +219,5 @@ public sealed class CommandViewModel : ObservableObject
         OnPropertyChanged(nameof(UptimeDisplay));
         OnPropertyChanged(nameof(LastLogDisplay));
     }
+
 }

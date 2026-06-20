@@ -19,7 +19,17 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Spacing="10" Margin="0,0,0,18">
-                            <TextBlock Text="{Binding Name}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Width="32" Height="32" Padding="0" Tag="{Binding}" AutomationProperties.Name="{Binding CollapseAutomationName}" Click="OnToggleSectionCollapsedClick">
+                                    <ToolTipService.ToolTip>Collapse or expand section</ToolTipService.ToolTip>
+                                    <FontIcon Glyph="{Binding CollapseGlyph}" FontSize="14" />
+                                </Button>
+                            </Grid>
                             <GridView
                                 ItemsSource="{Binding Commands}"
                                 SelectionMode="None"
@@ -40,7 +50,6 @@
                                     <DataTemplate>
                                         <Border
                                             Width="252"
-                                            MinHeight="170"
                                             Padding="14"
                                             CornerRadius="8"
                                             BorderThickness="1"
@@ -51,42 +60,46 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
-                                                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-                                                    <TextBlock Text="{Binding ButtonName}" FontSize="18" FontWeight="SemiBold" />
-                                                    <Border Padding="9,4" CornerRadius="4" Background="{Binding StatusBadgeBackground}">
+                                                <Grid Grid.Row="0" ColumnSpacing="8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding ButtonName}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                    <Border Grid.Column="1" Padding="9,4" CornerRadius="4" Background="{Binding StatusBadgeBackground}" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusBadgeForeground}" FontWeight="SemiBold" />
                                                     </Border>
+                                                </Grid>
+
+                                                <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="8" Visibility="{Binding DetailsVisibility}">
+                                                    <TextBlock Text="{Binding CommandSummary}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Text="{Binding WorkingDirectory}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <StackPanel Orientation="Vertical" Spacing="3">
+                                                        <TextBlock Text="{Binding UptimeDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <TextBlock Text="{Binding LastLogDisplay}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    </StackPanel>
                                                 </StackPanel>
 
-                                                <TextBlock Grid.Row="1" Text="{Binding CommandSummary}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                <TextBlock Grid.Row="2" Text="{Binding WorkingDirectory}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                                <StackPanel Grid.Row="3" Orientation="Vertical" Spacing="3">
-                                                    <TextBlock Text="{Binding UptimeDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                    <TextBlock Text="{Binding LastLogDisplay}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStartEnabled}" AutomationProperties.Name="Start" Click="OnStartClick">
+                                                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                                    <Button Width="38" Height="36" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStartEnabled}" AutomationProperties.Name="Start" Click="OnStartClick">
                                                         <ToolTipService.ToolTip>Start</ToolTipService.ToolTip>
                                                         <FontIcon Glyph="&#xE768;" FontSize="18" />
                                                     </Button>
-                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStopEnabled}" AutomationProperties.Name="Stop" Click="OnStopClick">
+                                                    <Button Width="38" Height="36" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStopEnabled}" AutomationProperties.Name="Stop" Click="OnStopClick">
                                                         <ToolTipService.ToolTip>Stop</ToolTipService.ToolTip>
                                                         <FontIcon Glyph="&#xE71A;" FontSize="17" />
                                                     </Button>
-                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsRestartEnabled}" AutomationProperties.Name="Restart" Click="OnRestartClick">
+                                                    <Button Width="38" Height="36" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsRestartEnabled}" AutomationProperties.Name="Restart" Click="OnRestartClick">
                                                         <ToolTipService.ToolTip>Restart</ToolTipService.ToolTip>
                                                         <FontIcon Glyph="&#xE72C;" FontSize="18" />
                                                     </Button>
-                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" AutomationProperties.Name="Command Logs" Click="OnLogsClick">
+                                                    <Button Width="38" Height="36" Padding="0" Tag="{Binding}" AutomationProperties.Name="Command Logs" Click="OnLogsClick">
                                                         <ToolTipService.ToolTip>Logs</ToolTipService.ToolTip>
                                                         <FontIcon Glyph="&#xE8A5;" FontSize="17" />
                                                     </Button>
-                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" Visibility="{Binding OpenUrlVisibility}" AutomationProperties.Name="Open URL" Click="OnOpenUrlClick">
+                                                    <Button Width="38" Height="36" Padding="0" Tag="{Binding}" Visibility="{Binding OpenUrlVisibility}" AutomationProperties.Name="Open URL" Click="OnOpenUrlClick">
                                                         <ToolTipService.ToolTip>Open URL</ToolTipService.ToolTip>
                                                         <FontIcon Glyph="&#xE71B;" FontSize="17" />
                                                     </Button>

@@ -5,6 +5,7 @@
     <NavigationView
         x:Name="RootNavigation"
         PaneTitle="Dev Command Launcher"
+        OpenPaneLength="220"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         SelectionChanged="OnNavigationSelectionChanged">
