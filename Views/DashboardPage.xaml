@@ -39,7 +39,7 @@
                                 <GridView.ItemTemplate>
                                     <DataTemplate>
                                         <Border
-                                            Width="360"
+                                            Width="252"
                                             MinHeight="170"
                                             Padding="14"
                                             CornerRadius="8"
