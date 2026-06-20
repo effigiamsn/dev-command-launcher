@@ -1,0 +1,105 @@
+<Page
+    x:Class="DevCommandLauncherApp.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="28,10,28,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
+            <AppBarButton Icon="Play" Label="Start All" Click="OnStartAllClick" />
+            <AppBarButton Icon="Stop" Label="Stop All" Click="OnStopAllClick" />
+            <AppBarButton Icon="Refresh" Label="Reload Config" Click="OnReloadClick" />
+        </CommandBar>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ListView ItemsSource="{Binding Projects}" SelectionMode="None" IsItemClickEnabled="False">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Spacing="10" Margin="0,0,0,18">
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <GridView
+                                ItemsSource="{Binding Commands}"
+                                SelectionMode="None"
+                                IsItemClickEnabled="False">
+                                <GridView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="2" />
+                                    </ItemsPanelTemplate>
+                                </GridView.ItemsPanel>
+                                <GridView.ItemContainerStyle>
+                                    <Style TargetType="GridViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                        <Setter Property="Margin" Value="0,0,12,12" />
+                                    </Style>
+                                </GridView.ItemContainerStyle>
+                                <GridView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Width="360"
+                                            MinHeight="170"
+                                            Padding="14"
+                                            CornerRadius="8"
+                                            BorderThickness="1"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                            <Grid RowSpacing="10">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                                                    <TextBlock Text="{Binding ButtonName}" FontSize="18" FontWeight="SemiBold" />
+                                                    <Border Padding="9,4" CornerRadius="4" Background="{Binding StatusBadgeBackground}">
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusBadgeForeground}" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Row="1" Text="{Binding CommandSummary}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="2" Text="{Binding WorkingDirectory}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                <StackPanel Grid.Row="3" Orientation="Vertical" Spacing="3">
+                                                    <TextBlock Text="{Binding UptimeDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Text="{Binding LastLogDisplay}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStartEnabled}" AutomationProperties.Name="Start" Click="OnStartClick">
+                                                        <ToolTipService.ToolTip>Start</ToolTipService.ToolTip>
+                                                        <FontIcon Glyph="&#xE768;" FontSize="18" />
+                                                    </Button>
+                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsStopEnabled}" AutomationProperties.Name="Stop" Click="OnStopClick">
+                                                        <ToolTipService.ToolTip>Stop</ToolTipService.ToolTip>
+                                                        <FontIcon Glyph="&#xE71A;" FontSize="17" />
+                                                    </Button>
+                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsRestartEnabled}" AutomationProperties.Name="Restart" Click="OnRestartClick">
+                                                        <ToolTipService.ToolTip>Restart</ToolTipService.ToolTip>
+                                                        <FontIcon Glyph="&#xE72C;" FontSize="18" />
+                                                    </Button>
+                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" AutomationProperties.Name="Command Logs" Click="OnLogsClick">
+                                                        <ToolTipService.ToolTip>Logs</ToolTipService.ToolTip>
+                                                        <FontIcon Glyph="&#xE8A5;" FontSize="17" />
+                                                    </Button>
+                                                    <Button Width="42" Height="38" Padding="0" Tag="{Binding}" Visibility="{Binding OpenUrlVisibility}" AutomationProperties.Name="Open URL" Click="OnOpenUrlClick">
+                                                        <ToolTipService.ToolTip>Open URL</ToolTipService.ToolTip>
+                                                        <FontIcon Glyph="&#xE71B;" FontSize="17" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridView.ItemTemplate>
+                            </GridView>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
+    </Grid>
+</Page>

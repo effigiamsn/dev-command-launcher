@@ -1,0 +1,60 @@
+<Page
+    x:Class="DevCommandLauncherApp.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="28,10,28,24" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <InfoBar
+            Grid.Row="0"
+            IsOpen="{Binding HasSettingsMessage, Mode=OneWay}"
+            Severity="Informational"
+            Message="{Binding SettingsMessage}" />
+
+        <Grid Grid.Row="1" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="10">
+                <CommandBar DefaultLabelPosition="Right" Background="Transparent">
+                    <AppBarButton Icon="Add" Label="Add Project" Click="OnAddProjectClick" />
+                    <AppBarButton Icon="Delete" Label="Delete" Click="OnDeleteProjectClick" />
+                </CommandBar>
+                <ListView ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject, Mode=TwoWay}" DisplayMemberPath="Name" />
+                <TextBox Header="Project Name" Text="{Binding SelectedProject.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="10">
+                <CommandBar DefaultLabelPosition="Right" Background="Transparent">
+                    <AppBarButton Icon="Add" Label="Add Command" Click="OnAddCommandClick" />
+                    <AppBarButton Icon="Delete" Label="Delete" Click="OnDeleteCommandClick" />
+                </CommandBar>
+                <ListView ItemsSource="{Binding SelectedProject.Commands}" SelectedItem="{Binding SelectedCommand, Mode=TwoWay}" DisplayMemberPath="ButtonName" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Command Editor" Style="{StaticResource SubtitleTextBlockStyle}" />
+                    <TextBox Header="Button Name" Text="{Binding SelectedCommand.ButtonName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="Command executable" PlaceholderText="npm.cmd" Text="{Binding SelectedCommand.Command, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="Arguments" PlaceholderText="run dev" Text="{Binding SelectedCommand.Args, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="Working Directory" Text="{Binding SelectedCommand.WorkingDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="Port (optional)" Text="{Binding SelectedCommand.PortText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="URL (optional)" Text="{Binding SelectedCommand.Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Header="Health URL (optional)" Text="{Binding SelectedCommand.HealthUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <CommandBar DefaultLabelPosition="Right" Background="Transparent">
+                        <AppBarButton Icon="Save" Label="Save Settings" Click="OnSaveClick" />
+                        <AppBarButton Icon="Refresh" Label="Reload Settings" Click="OnReloadClick" />
+                    </CommandBar>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>
