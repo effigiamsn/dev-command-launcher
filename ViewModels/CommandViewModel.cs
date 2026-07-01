@@ -6,6 +6,16 @@ namespace DevCommandLauncherApp.ViewModels;
 
 public sealed class CommandViewModel : ObservableObject
 {
+    private static readonly SolidColorBrush RunningBrush = CreateBrush(255, 22, 163, 74);
+    private static readonly SolidColorBrush StartingBrush = CreateBrush(255, 37, 99, 235);
+    private static readonly SolidColorBrush StoppingBrush = CreateBrush(255, 100, 116, 139);
+    private static readonly SolidColorBrush ExternalRunningBrush = CreateBrush(255, 8, 145, 178);
+    private static readonly SolidColorBrush PortConflictBrush = CreateBrush(255, 245, 158, 11);
+    private static readonly SolidColorBrush ErrorBrush = CreateBrush(255, 220, 38, 38);
+    private static readonly SolidColorBrush StoppedBrush = CreateBrush(255, 55, 65, 81);
+    private static readonly SolidColorBrush BlackBrush = new(Microsoft.UI.Colors.Black);
+    private static readonly SolidColorBrush WhiteBrush = new(Microsoft.UI.Colors.White);
+
     public CommandConfig Config { get; }
 
     private CommandStatus _status = CommandStatus.Stopped;
@@ -103,6 +113,13 @@ public sealed class CommandViewModel : ObservableObject
             {
                 Config.Port = port;
             }
+
+            OnPropertyChanged(nameof(ServerAddress));
+            OnPropertyChanged(nameof(ServerUri));
+            OnPropertyChanged(nameof(HasServerAddress));
+            OnPropertyChanged(nameof(OpenUrlVisibility));
+            OnPropertyChanged(nameof(ServerAddressVisibility));
+            OnPropertyChanged(nameof(IsCopyServerAddressEnabled));
         }
     }
 
@@ -111,10 +128,21 @@ public sealed class CommandViewModel : ObservableObject
         get => Config.Url ?? string.Empty;
         set
         {
-            Config.Url = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            if (string.Equals(Config.Url, normalized, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            Config.Url = normalized;
             OnPropertyChanged();
             OnPropertyChanged(nameof(HasUrl));
+            OnPropertyChanged(nameof(HasServerAddress));
             OnPropertyChanged(nameof(OpenUrlVisibility));
+            OnPropertyChanged(nameof(ServerAddress));
+            OnPropertyChanged(nameof(ServerUri));
+            OnPropertyChanged(nameof(ServerAddressVisibility));
+            OnPropertyChanged(nameof(IsCopyServerAddressEnabled));
         }
     }
 
@@ -123,7 +151,13 @@ public sealed class CommandViewModel : ObservableObject
         get => Config.HealthUrl ?? string.Empty;
         set
         {
-            Config.HealthUrl = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            if (string.Equals(Config.HealthUrl, normalized, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            Config.HealthUrl = normalized;
             OnPropertyChanged();
         }
     }
@@ -141,6 +175,7 @@ public sealed class CommandViewModel : ObservableObject
                 OnPropertyChanged(nameof(IsStartEnabled));
                 OnPropertyChanged(nameof(IsStopEnabled));
                 OnPropertyChanged(nameof(IsRestartEnabled));
+                OnPropertyChanged(nameof(IsCopyServerAddressEnabled));
             }
         }
     }
@@ -166,12 +201,21 @@ public sealed class CommandViewModel : ObservableObject
     public string CommandSummary => $"{Config.Command} {Config.Args}".Trim();
     public string UptimeDisplay => $"Uptime: {Uptime}";
     public string LastLogDisplay => $"Last log: {LastLogLine}";
+    public string ServerAddress => !string.IsNullOrWhiteSpace(Config.Url)
+        ? Config.Url
+        : Config.Port.HasValue && Config.Port.Value > 0
+            ? $"http://localhost:{Config.Port.Value}"
+            : string.Empty;
+    public Uri? ServerUri => Uri.TryCreate(ServerAddress, UriKind.Absolute, out var uri) ? uri : null;
     public bool HasUrl => !string.IsNullOrWhiteSpace(Config.Url);
-    public Visibility OpenUrlVisibility => HasUrl ? Visibility.Visible : Visibility.Collapsed;
+    public bool HasServerAddress => ServerUri is not null;
+    public Visibility OpenUrlVisibility => HasServerAddress ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ServerAddressVisibility => HasServerAddress ? Visibility.Visible : Visibility.Collapsed;
     public Visibility DetailsVisibility => IsCollapsed ? Visibility.Collapsed : Visibility.Visible;
     public bool IsStartEnabled => Status is CommandStatus.Stopped or CommandStatus.Error or CommandStatus.Crashed or CommandStatus.PortConflict;
     public bool IsStopEnabled => Status is CommandStatus.Running or CommandStatus.Starting;
-    public bool IsRestartEnabled => Status is not CommandStatus.Starting and not CommandStatus.Stopping;
+    public bool IsRestartEnabled => Status is not CommandStatus.Starting and not CommandStatus.Stopping and not CommandStatus.ExternalRunning;
+    public bool IsCopyServerAddressEnabled => HasServerAddress;
 
     public bool IsCollapsed
     {
@@ -187,23 +231,25 @@ public sealed class CommandViewModel : ObservableObject
 
     public string StatusText => Status switch
     {
+        CommandStatus.ExternalRunning => "External",
         CommandStatus.PortConflict => "Port Conflict",
         _ => Status.ToString()
     };
 
     public SolidColorBrush StatusBadgeBackground => Status switch
     {
-        CommandStatus.Running => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 22, 163, 74)),
-        CommandStatus.Starting => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 37, 99, 235)),
-        CommandStatus.Stopping => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 100, 116, 139)),
-        CommandStatus.PortConflict => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 245, 158, 11)),
-        CommandStatus.Error or CommandStatus.Crashed => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 220, 38, 38)),
-        _ => new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 55, 65, 81))
+        CommandStatus.Running => RunningBrush,
+        CommandStatus.Starting => StartingBrush,
+        CommandStatus.Stopping => StoppingBrush,
+        CommandStatus.ExternalRunning => ExternalRunningBrush,
+        CommandStatus.PortConflict => PortConflictBrush,
+        CommandStatus.Error or CommandStatus.Crashed => ErrorBrush,
+        _ => StoppedBrush
     };
 
     public SolidColorBrush StatusBadgeForeground => Status == CommandStatus.PortConflict
-        ? new SolidColorBrush(Microsoft.UI.Colors.Black)
-        : new SolidColorBrush(Microsoft.UI.Colors.White);
+        ? BlackBrush
+        : WhiteBrush;
 
     public void SetCollapsed(bool isCollapsed)
     {
@@ -218,6 +264,11 @@ public sealed class CommandViewModel : ObservableObject
         Uptime = state.StartTime is null ? "-" : (DateTimeOffset.UtcNow - state.StartTime.Value).ToString(@"hh\:mm\:ss");
         OnPropertyChanged(nameof(UptimeDisplay));
         OnPropertyChanged(nameof(LastLogDisplay));
+    }
+
+    private static SolidColorBrush CreateBrush(byte alpha, byte red, byte green, byte blue)
+    {
+        return new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(alpha, red, green, blue));
     }
 
 }

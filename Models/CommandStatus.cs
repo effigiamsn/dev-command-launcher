@@ -8,5 +8,6 @@ public enum CommandStatus
     Stopping,
     Error,
     Crashed,
+    ExternalRunning,
     PortConflict
 }

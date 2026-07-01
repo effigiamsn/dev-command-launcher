@@ -11,3 +11,4 @@
 - `docs/modules/settings.md`를 더 자세히 작성한다.
 - config file path를 Settings page에 표시하거나 copy button을 추가할지 검토한다.
 - process start 실패, health check 실패, port conflict 상태별 UX 문구를 정리한다.
+- HTTP가 아닌 server의 existing server detection을 어떻게 표시할지 검토한다.

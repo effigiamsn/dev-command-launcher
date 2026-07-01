@@ -27,3 +27,10 @@
 - Symptoms: button row overflow, uneven layout, clipped controls
 - Affected modules: `Views/DashboardPage.xaml`
 - Prevention: card width 변경 시 action button width와 spacing을 함께 확인한다.
+
+## Stop timeout must keep process reference
+
+- Cause: `Kill(entireProcessTree: true)` 이후 `WaitForExit(3000)`이 timeout되었는데 `CommandRuntimeState.Process`를 null로 지우면 앱이 아직 살아 있는 process를 추적할 수 없다.
+- Symptoms: UI는 stop/retry 대상을 잃고, 실제 server/process는 계속 실행될 수 있다.
+- Affected modules: `Services/CommandProcessManager.cs`, `Models/CommandRuntimeState.cs`
+- Prevention: process가 아직 종료되지 않았으면 `Error` 상태와 system log를 남기고 `Process` reference를 유지한다.
