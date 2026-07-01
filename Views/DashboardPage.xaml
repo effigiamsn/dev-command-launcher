@@ -76,6 +76,24 @@
                                                 <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="8" Visibility="{Binding DetailsVisibility}">
                                                     <TextBlock Text="{Binding CommandSummary}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                     <TextBlock Text="{Binding WorkingDirectory}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <Grid ColumnSpacing="6" Visibility="{Binding ServerAddressVisibility}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <HyperlinkButton
+                                                            Grid.Column="0"
+                                                            Padding="0"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Stretch"
+                                                            NavigateUri="{Binding ServerUri}">
+                                                            <TextBlock Text="{Binding ServerAddress}" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                                                        </HyperlinkButton>
+                                                        <Button Grid.Column="1" Width="32" Height="30" Padding="0" Tag="{Binding}" IsEnabled="{Binding IsCopyServerAddressEnabled}" AutomationProperties.Name="Copy Server URL" Click="OnCopyUrlClick">
+                                                            <ToolTipService.ToolTip>Copy server URL</ToolTipService.ToolTip>
+                                                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                        </Button>
+                                                    </Grid>
                                                     <StackPanel Orientation="Vertical" Spacing="3">
                                                         <TextBlock Text="{Binding UptimeDisplay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                         <TextBlock Text="{Binding LastLogDisplay}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

@@ -14,6 +14,7 @@ public sealed class MainViewModel : ObservableObject
     private ProjectViewModel? _selectedProject;
     private CommandViewModel? _selectedCommand;
     private LogCommandOption? _selectedLogCommand;
+    private readonly DispatcherQueueTimer _logRefreshTimer;
     private string _statusMessage = "Ready.";
     private string _settingsMessage = string.Empty;
     private string _logText = "No logs yet. Start a command to see output.";
@@ -25,6 +26,13 @@ public sealed class MainViewModel : ObservableObject
     public MainViewModel()
     {
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        _logRefreshTimer = _dispatcherQueue.CreateTimer();
+        _logRefreshTimer.Interval = TimeSpan.FromMilliseconds(200);
+        _logRefreshTimer.Tick += (_, _) =>
+        {
+            _logRefreshTimer.Stop();
+            RefreshLogText();
+        };
         _processManager.CommandStateChanged += OnCommandStateChanged;
         _processManager.CommandLogAdded += OnCommandLogAdded;
         ReloadConfiguration();
@@ -196,6 +204,24 @@ public sealed class MainViewModel : ObservableObject
         StatusMessage = $"Starting {command.ButtonName}...";
         await _processManager.StartAsync(command.Config);
         command.Refresh(_processManager.GetState(command.Id));
+    }
+
+    public async Task DetectExistingServersAsync()
+    {
+        StatusMessage = "Checking configured server ports...";
+        var commands = Projects.SelectMany(x => x.Commands).ToList();
+        var detectionTasks = commands
+            .Select(command => _processManager.DetectExistingServerAsync(command.Config))
+            .ToList();
+
+        await Task.WhenAll(detectionTasks);
+
+        foreach (var command in commands)
+        {
+            command.Refresh(_processManager.GetState(command.Id));
+        }
+
+        StatusMessage = "Server port check complete.";
     }
 
     public void Stop(CommandViewModel? command)
@@ -376,8 +402,18 @@ public sealed class MainViewModel : ObservableObject
         {
             var command = Projects.SelectMany(x => x.Commands).FirstOrDefault(x => x.Id == commandId);
             command?.Refresh(_processManager.GetState(commandId));
-            RefreshLogText();
+            ScheduleLogTextRefresh();
         });
+    }
+
+    private void ScheduleLogTextRefresh()
+    {
+        if (_logRefreshTimer.IsRunning)
+        {
+            return;
+        }
+
+        _logRefreshTimer.Start();
     }
 
     private void RefreshLogText()

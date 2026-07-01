@@ -16,6 +16,7 @@ public sealed class CommandProcessManager
     private static readonly Regex AnsiEscapeRegex = new(
         @"\u001B(?:\[[0-?]*[ -/]*[@-~]|\][^\u0007]*(?:\u0007|\u001B\\)|[PX^_].*?\u001B\\)",
         RegexOptions.Compiled);
+    private static readonly Regex ShellMetacharacterRegex = new(@"[&|^<>`]", RegexOptions.Compiled);
 
     private readonly Dictionary<string, CommandRuntimeState> _states = new();
     private readonly object _stateLock = new();
@@ -64,8 +65,17 @@ public sealed class CommandProcessManager
                 .ConfigureAwait(false);
             if (portConflict)
             {
-                state.SetStatus(CommandStatus.PortConflict, $"Port {command.Port} is already in use.");
-                AppendLog(state, true, "system", $"Port in use: {command.Port}");
+                if (await IsConfiguredServerReachableAsync(command, cancellationToken).ConfigureAwait(false))
+                {
+                    state.SetStatus(CommandStatus.ExternalRunning, $"Server already running: {GetServerAddress(command)}");
+                    AppendLog(state, false, "system", $"Existing server detected: {GetServerAddress(command)}");
+                }
+                else
+                {
+                    state.SetStatus(CommandStatus.PortConflict, $"Port {command.Port} is already in use.");
+                    AppendLog(state, true, "system", $"Port in use: {command.Port}");
+                }
+
                 RaiseStateChanged(command.Id, state);
                 return;
             }
@@ -110,6 +120,14 @@ public sealed class CommandProcessManager
 
             try
             {
+                if (ContainsShellMetacharacter(commandLine))
+                {
+                    state.SetStatus(CommandStatus.Error, "Shell fallback rejected unsafe command characters.");
+                    AppendLog(state, true, "system", "Shell fallback rejected because the command line contains shell metacharacters.");
+                    RaiseStateChanged(command.Id, state);
+                    return;
+                }
+
                 process = CreateShellProcess(command.WorkingDirectory, commandLine);
                 AttachProcessEvents(process, command.Id, state);
                 if (!process.Start())
@@ -202,6 +220,46 @@ public sealed class CommandProcessManager
         RaiseStateChanged(command.Id, state);
     }
 
+    public async Task DetectExistingServerAsync(CommandConfig command, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(command.Id) ||
+            !command.Port.HasValue ||
+            command.Port.Value <= 0)
+        {
+            return;
+        }
+
+        var state = GetState(command.Id);
+        if (state.Process is not null && !state.Process.HasExited)
+        {
+            return;
+        }
+
+        var portInUse = await PortChecker.IsPortInUseAsync(command.Port.Value, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!portInUse)
+        {
+            if (state.Status is CommandStatus.PortConflict or CommandStatus.ExternalRunning)
+            {
+                state.SetStatus(CommandStatus.Stopped, "Stopped");
+                RaiseStateChanged(command.Id, state);
+            }
+
+            return;
+        }
+
+        if (await IsConfiguredServerReachableAsync(command, cancellationToken).ConfigureAwait(false))
+        {
+            state.SetStatus(CommandStatus.ExternalRunning, $"Server already running: {GetServerAddress(command)}");
+            RaiseStateChanged(command.Id, state);
+            return;
+        }
+
+        state.SetStatus(CommandStatus.PortConflict, $"Port {command.Port} is already in use.");
+        RaiseStateChanged(command.Id, state);
+    }
+
     public async Task RestartAsync(CommandConfig command, CancellationToken cancellationToken = default)
     {
         Stop(command.Id);
@@ -241,9 +299,14 @@ public sealed class CommandProcessManager
             if (process.HasExited)
             {
                 state.SetStatus(CommandStatus.Stopped, "Stopped");
+                state.SetProcess(null);
+            }
+            else
+            {
+                state.SetStatus(CommandStatus.Error, "Stop timed out; process is still running.");
+                AppendLog(state, true, "system", "Stop timed out after 3000 ms; keeping process reference for retry.");
             }
 
-            state.SetProcess(null);
             RaiseStateChanged(commandId, state);
         }
     }
@@ -380,6 +443,59 @@ public sealed class CommandProcessManager
             AppendLog(state, true, "system", $"Process exited ({process.ExitCode}).");
             RaiseStateChanged(commandId, state);
         };
+    }
+
+    private static bool ContainsShellMetacharacter(string commandLine)
+    {
+        return ShellMetacharacterRegex.IsMatch(commandLine);
+    }
+
+    private static async Task<bool> IsConfiguredServerReachableAsync(
+        CommandConfig command,
+        CancellationToken cancellationToken)
+    {
+        foreach (var endpoint in GetDetectionEndpoints(command))
+        {
+            if (await HealthCheckService.IsReachableAsync(
+                    endpoint,
+                    TimeSpan.FromMilliseconds(1500),
+                    cancellationToken).ConfigureAwait(false))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static IEnumerable<string> GetDetectionEndpoints(CommandConfig command)
+    {
+        if (!string.IsNullOrWhiteSpace(command.HealthUrl))
+        {
+            yield return command.HealthUrl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.Url))
+        {
+            yield return command.Url;
+        }
+
+        if (command.Port.HasValue && command.Port.Value > 0)
+        {
+            yield return $"http://localhost:{command.Port.Value}";
+        }
+    }
+
+    private static string GetServerAddress(CommandConfig command)
+    {
+        if (!string.IsNullOrWhiteSpace(command.Url))
+        {
+            return command.Url;
+        }
+
+        return command.Port.HasValue && command.Port.Value > 0
+            ? $"http://localhost:{command.Port.Value}"
+            : string.Empty;
     }
 
     private CommandRuntimeState CreateStateLocked(string commandId)
